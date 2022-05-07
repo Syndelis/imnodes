@@ -1959,7 +1959,11 @@ static void MiniMapUpdate()
     if (editor.shouldMove) {
 
         // Linear interpolate between current panning and target panning
-        editor.Panning = ImLerp(editor.Panning, editor.moveTarget, 0.05f);
+        editor.Panning = ImLerp(
+            editor.Panning,
+            editor.moveTarget,
+            ImGui::GetIO().DeltaTime * 12
+        );
 
         // If we're close enough to the target, stop moving
         if (ImLengthSqr(editor.Panning - editor.moveTarget) < 0.001f)
@@ -2152,6 +2156,15 @@ void EditorContextSetZoom(float zoom, const ImVec2& zoom_centering_pos)
     editor.Zoom = new_zoom;
     const ImVec2 new_center = ScreenSpaceToGridSpace(editor, zoom_centering_pos);
     editor.Panning += new_center - old_center;
+}
+
+void EditorContextSmoothZoom(float zoom, const ImVec2& zoom_centering_pos)
+{
+    ImNodesEditorContext& editor = EditorContextGet();
+    editor.shouldZoom = true;
+    editor.zoomTarget = editor.Zoom - (editor.Zoom - zoom) * editor.Zoom;
+
+    editor.zoom_centering_pos = zoom_centering_pos;
 }
 
 void EditorContextDrawDebugInfo()
@@ -2367,6 +2380,24 @@ void BeginNodeEditor()
     GImNodes->AltMouseScrollDelta = ImGui::GetIO().MouseWheel;
 
     GImNodes->ActiveAttribute = false;
+
+    if (editor.shouldZoom) {
+
+        // Linear interpolation between zoom levels
+        float zoom = ImLerp(
+            editor.Zoom,
+            editor.zoomTarget,
+            ImGui::GetIO().DeltaTime * 8
+        );
+        EditorContextSetZoom(zoom, editor.zoom_centering_pos);
+
+        // If we are close enough to the target zoom level, snap to it
+        if (fabs(editor.Zoom - editor.zoomTarget) < .01f) {
+            EditorContextSetZoom(editor.Zoom, editor.zoom_centering_pos);
+            editor.shouldZoom = false;
+        }
+
+    }
 
     ImGui::BeginGroup();
     {
