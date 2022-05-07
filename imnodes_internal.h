@@ -293,11 +293,15 @@ struct ImNodesEditorContext
     ImRect MiniMapContentScreenSpace;
     float  MiniMapScaling;
 
+    bool shouldMove;
+    ImVec2 moveTarget;
+
     ImNodesEditorContext()
         : Nodes(), Pins(), Links(), Panning(0.f, 0.f), Zoom(1.0f), SelectedNodeIndices(),
           SelectedLinkIndices(), ClickInteraction(), MiniMapEnabled(false),
           MiniMapSizeFraction(0.0f), MiniMapNodeHoveringCallback(NULL),
-          MiniMapNodeHoveringCallbackUserData(NULL), MiniMapScaling(0.0f)
+          MiniMapNodeHoveringCallbackUserData(NULL), MiniMapScaling(0.0f),
+          shouldMove(false), moveTarget(0.0f, 0.0f)
     {
     }
 };

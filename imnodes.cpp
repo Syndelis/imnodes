@@ -1952,7 +1952,19 @@ static void MiniMapUpdate()
     {
         ImVec2 target = MiniMapSpaceToGridSpace(editor, ImGui::GetMousePos());
         ImVec2 center = editor.VisibleGridRect.GetSize() * 0.5f;
-        editor.Panning = ImFloor(center - target);
+        editor.shouldMove = true;
+        editor.moveTarget = ImFloor(center - target);
+    }
+
+    if (editor.shouldMove) {
+
+        // Linear interpolate between current panning and target panning
+        editor.Panning = ImLerp(editor.Panning, editor.moveTarget, 0.05f);
+
+        // If we're close enough to the target, stop moving
+        if (ImLengthSqr(editor.Panning - editor.moveTarget) < 0.001f)
+            editor.shouldMove = false;
+
     }
 
     // Reset callback info after use
@@ -2364,9 +2376,9 @@ void BeginNodeEditor()
         ImGui::BeginChild(
             "scrolling_region",
             ImVec2(0.f, 0.f),
-            true,
+            false,
             ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove |
-                ImGuiWindowFlags_NoScrollWithMouse);
+                ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoBackground);
         const ImVec2 canvas_origin = ImGui::GetCursorScreenPos();
         const ImVec2 canvas_size = ImGui::GetWindowSize();
         GImNodes->CanvasRectScreenSpace = ImRect(canvas_origin, canvas_origin + canvas_size);
