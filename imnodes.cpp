@@ -1937,8 +1937,15 @@ static void MiniMapUpdate()
         const ImU32  outline_color = GImNodes->Style.Colors[ImNodesCol_MiniMapCanvasOutline];
         const ImRect rect = ScreenSpaceToMiniMapSpace(editor, GImNodes->CanvasRectScreenSpace);
 
-        draw_list->AddRectFilled(rect.Min, rect.Max, canvas_color);
-        draw_list->AddRect(rect.Min, rect.Max, outline_color);
+        float zoomLevel = editor.Zoom;
+        ImVec2 sliderSize(40, mini_map_rect.Max.y - mini_map_rect.Min.y);
+        ImGui::VSliderFloat("##v", sliderSize, &zoomLevel, 0.0f, 3.0f, "%.2f\nZoom");
+
+        if (zoomLevel != editor.Zoom)
+            EditorContextSetZoom(zoomLevel);
+
+        draw_list->AddRectFilled(rect.Min + ImVec2(sliderSize.x, 0), rect.Max, canvas_color);
+        draw_list->AddRect(rect.Min + ImVec2(sliderSize.x, 0), rect.Max, outline_color);
     }
 
     bool mini_map_is_hovered = ImGui::IsWindowHovered();
@@ -2392,7 +2399,7 @@ void BeginNodeEditor()
         EditorContextSetZoom(zoom, editor.zoom_centering_pos);
 
         // If we are close enough to the target zoom level, snap to it
-        if (fabs(editor.Zoom - editor.zoomTarget) < .01f) {
+        if (editor.Zoom < .2f || editor.Zoom > 9.5f || fabs(editor.Zoom - editor.zoomTarget) < .01f) {
             EditorContextSetZoom(editor.Zoom, editor.zoom_centering_pos);
             editor.shouldZoom = false;
         }
